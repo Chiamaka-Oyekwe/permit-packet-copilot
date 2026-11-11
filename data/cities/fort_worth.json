@@ -1,0 +1,322 @@
+{
+  "city": "Fort Worth",
+  "slug": "fort_worth",
+  "permit_name": "Street Use Franchise Utility Permit",
+  "portal": "Accela Citizen Access",
+  "reviewed": "2026-11-11",
+  "requirements": [
+    {
+      "id": "FTW-APP",
+      "kind": "document",
+      "title": "Street Use Franchise Utility Permit application",
+      "detail": "Filed online in Accela Citizen Access by a registered company.",
+      "when": null,
+      "match": [
+        "application",
+        "permit form"
+      ],
+      "source": {
+        "label": "Fort Worth UT permit submittal guide",
+        "cite": "Step 5",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/v/1/tpw/documents/04-aca-how-to-create-an-application-ut-permit-submittal-process_1.pdf"
+      }
+    },
+    {
+      "id": "FTW-PLANS",
+      "kind": "document",
+      "title": "Engineering plans with cover sheet",
+      "detail": "Cover sheet with work limits, requested working days, a 24-hour contact and a table of contents. Show trenches, bores, right-of-way, curbs, driveways, sidewalks, landscaping and nearby utilities, with bore and trench lengths and depths. Engineer's name and the final date on every sheet.",
+      "when": null,
+      "match": [
+        "plan",
+        "drawing",
+        "design"
+      ],
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.4",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      },
+      "exclude": [
+        "traffic",
+        "tcp"
+      ]
+    },
+    {
+      "id": "FTW-LEAD",
+      "kind": "timing",
+      "title": "Plans in 10 working days before construction",
+      "detail": "One electronic copy. Service-connection plans need 5 working days.",
+      "when": {
+        "field": "emergency",
+        "op": "eq",
+        "value": false
+      },
+      "lead_business_days": 10,
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.2, B.4",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-TCP",
+      "kind": "document",
+      "title": "Traffic control plan, formatted like the engineering plans",
+      "detail": "Follows the current MUTCD. Downtown and arterial streets: one lane closed at most, 9:00 AM to 4:00 PM unless extended. Other streets: 7:00 AM to 6:00 PM.",
+      "when": {
+        "any": [
+          {
+            "field": "lane_closure",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "sidewalk_closure",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "match": [
+        "tcp",
+        "traffic control",
+        "traffic"
+      ],
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.5, C",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-BOND",
+      "kind": "document",
+      "title": "Contractor bond and certificate of insurance",
+      "detail": "The City's contractor requirements point to a $25,000 streets and storm drain contractor bond and a basic insurance sheet. Confirm current amounts with the City.",
+      "when": null,
+      "match": [
+        "bond",
+        "insurance",
+        "coi"
+      ],
+      "source": {
+        "label": "Fort Worth Franchise Utility Permitting Guidelines",
+        "cite": "Contractor requirements links",
+        "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"
+      }
+    },
+    {
+      "id": "FTW-SWPPP",
+      "kind": "document",
+      "title": "SWPPP, TCEQ coverage and grading permit",
+      "detail": "Needed when the project disturbs 1.0 acre or more.",
+      "when": {
+        "field": "disturbed_acres",
+        "op": "gte",
+        "value": 1.0
+      },
+      "match": [
+        "swppp",
+        "stormwater",
+        "grading"
+      ],
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.6",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-DOOR",
+      "kind": "notice",
+      "title": "Doorhangers 7 days and 1 day before work",
+      "detail": "Every resident on each block. Work cannot begin until they are delivered.",
+      "when": null,
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.9",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-48",
+      "kind": "notice",
+      "title": "48-hour customer, HOA and neighborhood notice",
+      "detail": "Notice names the utility and contractor, a 24/7 contact, start date, type of work and expected duration. The policy and the guidelines page give different notice windows, so confirm which the inspector expects.",
+      "when": null,
+      "source": {
+        "label": "Fort Worth Franchise Utility Permitting Guidelines",
+        "cite": "Notice requirements",
+        "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"
+      }
+    },
+    {
+      "id": "FTW-SIGN",
+      "kind": "notice",
+      "title": "Project sign at each end, 48 hours before start",
+      "detail": "Shows the expected timeline and work area. A contractor notification sign is also required.",
+      "when": null,
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.9",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-LOCATE",
+      "kind": "field",
+      "title": "Utility locates before construction",
+      "detail": "Through Texas One-Call or equivalent. City water or sewer lines 16 inches or larger need hydro-excavation verification.",
+      "when": {
+        "any": [
+          {
+            "field": "method",
+            "op": "in",
+            "value": [
+              "bore",
+              "trench"
+            ]
+          },
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.8",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-BORE",
+      "kind": "field",
+      "title": "Cross-street utilities must be bored",
+      "detail": "Unless the director approves otherwise. Minimum cover is 42 inches under pavement and 24 inches in the parkway. Driveways should be bored where possible.",
+      "when": {
+        "any": [
+          {
+            "field": "method",
+            "op": "in",
+            "value": [
+              "bore",
+              "trench"
+            ]
+          },
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "D.1 to D.5",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-TREE",
+      "kind": "field",
+      "title": "Bore under tree drip lines; no cutting roots 2 inches or larger",
+      "detail": "No excavation, grading or storage inside the drip line. Cutting large roots on right-of-way trees needs City Forester approval first.",
+      "when": {
+        "field": "in_tree_dripline",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Fort Worth Franchise Utility Permitting Guidelines",
+        "cite": "Property, trees and site conditions",
+        "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"
+      }
+    },
+    {
+      "id": "FTW-NEWPAVE",
+      "kind": "prerequisite",
+      "title": "Director approval to cut pavement under two years old",
+      "detail": "Concrete needs full-slab replacement. Asphalt needs a 2-inch mill and overlay, curb to curb and block to block.",
+      "when": {
+        "all": [
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "pavement_age_years",
+            "op": "lt",
+            "value": 2
+          }
+        ]
+      },
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "D.6",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-START",
+      "kind": "timing",
+      "title": "Start within 30 calendar days of approval",
+      "detail": "Otherwise the permit is void. Extension requests are due 3 working days before it expires.",
+      "when": null,
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.2",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-ONSITE",
+      "kind": "field",
+      "title": "Permit, traffic control plan and plans kept on site",
+      "detail": "A person who can make decisions must be on site while work is active.",
+      "when": null,
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.2",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-ASBUILT",
+      "kind": "document",
+      "title": "Red-lines within 30 days of each segment; as-builts within 30 days of completion",
+      "detail": "As-builts are delivered as PDF. This is a closeout item, not part of the first submittal.",
+      "when": null,
+      "closeout": true,
+      "match": [
+        "as-built",
+        "asbuilt",
+        "redline"
+      ],
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "E",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    },
+    {
+      "id": "FTW-EMERG",
+      "kind": "notice",
+      "title": "Emergency work: notify and apply within 24 hours",
+      "detail": "Include a written description. Temporary repairs become permanent within 14 calendar days.",
+      "when": {
+        "field": "emergency",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)",
+        "cite": "B.3, D.8",
+        "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"
+      }
+    }
+  ]
+}

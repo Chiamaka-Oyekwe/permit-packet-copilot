@@ -1,0 +1,250 @@
+{
+  "city": "Richardson",
+  "slug": "richardson",
+  "permit_name": "Right-of-Way Construction Permit",
+  "portal": "Email or in person at City Hall",
+  "reviewed": "2026-11-11",
+  "requirements": [
+    {
+      "id": "RIC-REG",
+      "kind": "prerequisite",
+      "title": "Registration form approved first",
+      "detail": "The City will not take a permit application until registration is complete and approved.",
+      "when": null,
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Page 1",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-APP",
+      "kind": "document",
+      "title": "Application signed by owner, contractor and subcontractor",
+      "detail": "All three sign and date. Each lists a contact and a 24-hour emergency phone. Describe the work with street names, termination points, and quantity of line and poles.",
+      "when": null,
+      "match": [
+        "application",
+        "permit form"
+      ],
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Pages 1 and 5",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-DIG",
+      "kind": "prerequisite",
+      "title": "DIG-TESS confirmation number on the application",
+      "detail": "Needed when pavement is removed or excavation is required.",
+      "when": {
+        "any": [
+          {
+            "field": "method",
+            "op": "in",
+            "value": [
+              "bore",
+              "trench"
+            ]
+          },
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Project details",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-PLANS",
+      "kind": "document",
+      "title": "Plans and maps, no larger than 11x17",
+      "detail": "One digital copy, or five paper copies.",
+      "when": null,
+      "match": [
+        "plan",
+        "map",
+        "drawing",
+        "design"
+      ],
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Submittal items",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      },
+      "exclude": [
+        "traffic",
+        "tcp"
+      ]
+    },
+    {
+      "id": "RIC-TCP",
+      "kind": "document",
+      "title": "Site-specific traffic control plan",
+      "detail": "Shows a north arrow, street name and the area of construction, and follows the TMUTCD. Lane closures run weekdays 9:00 AM to 3:30 PM only.",
+      "when": {
+        "any": [
+          {
+            "field": "lane_closure",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "sidewalk_closure",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "match": [
+        "tcp",
+        "traffic control",
+        "traffic"
+      ],
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Traffic control",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-VIDEO",
+      "kind": "document",
+      "title": "Video of the project limits, before and after",
+      "detail": "In a City-approved format. The before video is due before work starts.",
+      "when": null,
+      "match": [
+        "video",
+        ".mp4",
+        ".mov"
+      ],
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Video documentation",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-48",
+      "kind": "notice",
+      "title": "48-hour calls to inspection, traffic and water",
+      "detail": "No work until all locates are marked in the field.",
+      "when": null,
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Notifications before work",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-SIGNAL",
+      "kind": "notice",
+      "title": "48-hour notice for work within 500 ft of a signal",
+      "detail": "Call the Traffic Department before working near a signalized intersection.",
+      "when": {
+        "field": "near_signal",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Notifications before work",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-BORE",
+      "kind": "field",
+      "title": "Boring hours: Mon to Thu until 3:00 PM, Fri until noon",
+      "detail": "No missile work. No weekend work unless the inspector approves.",
+      "when": {
+        "field": "method",
+        "op": "eq",
+        "value": "bore"
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Work restrictions",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-CONC",
+      "kind": "notice",
+      "title": "24-hour notice and mix design before placing concrete",
+      "detail": "Call the Construction Inspection Office to schedule the inspection.",
+      "when": {
+        "field": "pavement_cut",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Notifications before work",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-RESTORE",
+      "kind": "field",
+      "title": "Backfill density, concrete strength and vegetation verified",
+      "detail": "Provide verification of backfill densities and concrete strength, re-establish vegetation, and remove locate markings before closeout.",
+      "when": {
+        "any": [
+          {
+            "field": "method",
+            "op": "in",
+            "value": [
+              "bore",
+              "trench"
+            ]
+          },
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Site requirements",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-START",
+      "kind": "timing",
+      "title": "Start within 30 days of issuance",
+      "detail": "The permit is void if construction has not begun.",
+      "when": null,
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Timing and validity",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    },
+    {
+      "id": "RIC-EMERG",
+      "kind": "notice",
+      "title": "Emergency work: apply within one business day",
+      "detail": "The application is due no later than one business day after work begins.",
+      "when": {
+        "field": "emergency",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Richardson ROW Construction Permit application (rev. 02/07/22)",
+        "cite": "Timing and validity",
+        "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"
+      }
+    }
+  ]
+}

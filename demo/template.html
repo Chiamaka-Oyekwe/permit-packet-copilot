@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permit Packet Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a plan sheet. Job inputs in a left rail, the checked packet on the right, title block on top. */
+:root {
+  --paper: #f4f6f5;
+  --sheet: #ffffff;
+  --ink: #17262b;
+  --muted: #5a6b70;
+  --line: #d3dbd9;
+  --accent: #0b5d6b;
+  --accent-ink: #ffffff;
+  --good: #1f7a4d;
+  --good-bg: #e3f3ea;
+  --bad: #b3401a;
+  --bad-bg: #fbe9e1;
+  --warn: #8a6100;
+  --warn-bg: #fbf1d4;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10191c; --sheet: #172327; --ink: #e6eeec; --muted: #9bacaf; --line: #2c3c40;
+    --accent: #5cc3d1; --accent-ink: #082126;
+    --good: #6fd3a0; --good-bg: #173527; --bad: #ff9a72; --bad-bg: #3e2016; --warn: #e8c35a; --warn-bg: #3a2f10;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10191c; --sheet: #172327; --ink: #e6eeec; --muted: #9bacaf; --line: #2c3c40;
+  --accent: #5cc3d1; --accent-ink: #082126;
+  --good: #6fd3a0; --good-bg: #173527; --bad: #ff9a72; --bad-bg: #3e2016; --warn: #e8c35a; --warn-bg: #3a2f10;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 15px/1.5 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: 30px; line-height: 1.1; letter-spacing: 0.01em; }
+h2 { font-size: 19px; letter-spacing: 0.02em; text-transform: uppercase; }
+h3 { font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0; }
+a { color: var(--accent); }
+.titleblock { display: grid; grid-template-columns: 1fr auto; border: 1.5px solid var(--ink); background: var(--sheet); }
+.titleblock > div { padding: 14px 16px; }
+.titleblock .lede { color: var(--muted); max-width: 62ch; margin-top: 6px; }
+.titleblock .meta { border-left: 1.5px solid var(--ink); display: grid; align-content: stretch; padding: 0; min-width: 190px; }
+.meta div { padding: 7px 12px; border-bottom: 1px solid var(--line); font: 400 12px/1.35 var(--mono); }
+.meta div:last-child { border-bottom: 0; }
+.meta b { display: block; font: 600 10px/1.2 var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cols { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: start; }
+.panel { background: var(--sheet); border: 1px solid var(--line); padding: 16px; display: grid; gap: 14px; }
+.rail { position: sticky; top: 12px; }
+label { display: grid; gap: 4px; font-size: 13px; font-weight: 500; }
+input[type=text], input[type=number], input[type=date], select, textarea {
+  font: 400 14px/1.4 var(--body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 3px; padding: 7px 8px; width: 100%;
+}
+textarea { font-family: var(--mono); font-size: 13px; resize: vertical; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.checks { display: grid; gap: 6px; }
+.checks label { grid-template-columns: auto 1fr; align-items: center; gap: 8px; font-weight: 400; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { border: 1px solid var(--line); border-left-width: 5px; padding: 10px 12px; background: var(--sheet); }
+.stat b { display: block; font: 600 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+.stat.good { border-left-color: var(--good); } .stat.bad { border-left-color: var(--bad); } .stat.warn { border-left-color: var(--warn); } .stat.plain { border-left-color: var(--accent); }
+.results { display: grid; gap: 20px; }
+.group { display: grid; gap: 8px; }
+.req { display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--line); align-items: start; }
+.req .id { font: 500 12px/1.7 var(--mono); color: var(--muted); }
+.req .t { font-weight: 600; }
+.req .d { color: var(--muted); font-size: 14px; max-width: 68ch; }
+.req .s { font-size: 12.5px; margin-top: 2px; }
+.pill { font: 600 11px/1 var(--body); letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; border-radius: 2px; white-space: nowrap; }
+.pill.good { background: var(--good-bg); color: var(--good); } .pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.warn { background: var(--warn-bg); color: var(--warn); }
+pre.letter { margin: 0; white-space: pre-wrap; font: 400 13.5px/1.55 var(--mono); background: var(--paper); border: 1px solid var(--line); padding: 14px; overflow-x: auto; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 13px/1 var(--body); padding: 9px 12px; border-radius: 3px; border: 1px solid var(--accent); background: var(--sheet); color: var(--accent); cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+button:disabled { opacity: 0.55; cursor: progress; }
+.note { font-size: 13px; color: var(--muted); max-width: 70ch; }
+.unmatched { font: 400 12.5px/1.5 var(--mono); color: var(--muted); }
+.drop { display: grid; gap: 8px; border: 1.5px dashed var(--accent); border-radius: 3px; padding: 12px; font-size: 13px; color: var(--muted); }
+.drop b { color: var(--ink); font-size: 14px; }
+.drop.over { background: var(--good-bg); }
+.ai[hidden] { display: none; }
+.answer { white-space: pre-wrap; background: var(--paper); border: 1px solid var(--line); padding: 12px; font-size: 14px; }
+@media (max-width: 860px) {
+  .cols { grid-template-columns: 1fr; } .rail { position: static; }
+  .titleblock { grid-template-columns: 1fr; } .titleblock .meta { border-left: 0; border-top: 1.5px solid var(--ink); }
+  .summary { grid-template-columns: 1fr; }
+  .req { grid-template-columns: 1fr auto; } .req .id { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="titleblock">
+    <div>
+      <h1>Permit Packet Copilot</h1>
+      <p class="lede">Describe a fiber job, list the files in your packet, and see what the city will ask for that you have not attached yet. Every requirement links to the ordinance or form it came from.</p>
+    </div>
+    <div class="meta">
+      <div><b>Built by</b>Chiamaka Oyekwe</div>
+      <div><b>Cities</b>Dallas, Fort Worth, Richardson</div>
+      <div><b>Rules read</b><span id="reviewed"></span></div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <form class="panel rail" id="job" autocomplete="off">
+      <h2>The job</h2>
+      <label>City
+        <select id="city"></select>
+      </label>
+      <label>Location
+        <input type="text" id="location" value="Elm St from N Akard St to N Ervay St">
+      </label>
+      <div class="two">
+        <label>Method
+          <select id="method"><option value="bore">Bore</option><option value="trench">Open trench</option><option value="aerial">Aerial</option></select>
+        </label>
+        <label>Length (ft)
+          <input type="number" id="length_ft" min="0" value="640">
+        </label>
+      </div>
+      <label>Street type
+        <select id="street_class"><option value="residential">Local residential</option><option value="collector">Collector</option><option value="arterial">Arterial</option><option value="downtown" selected>Downtown / CBD</option></select>
+      </label>
+      <div class="two">
+        <label>Submitting on
+          <input type="date" id="submit_date">
+        </label>
+        <label>Work starts
+          <input type="date" id="start_date">
+        </label>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="new_facility" checked> New facility (not a repair)</label>
+        <label><input type="checkbox" id="lane_closure" checked> Lane closure</label>
+        <label><input type="checkbox" id="sidewalk_closure" checked> Sidewalk closure</label>
+        <label><input type="checkbox" id="pavement_cut"> Pavement cut</label>
+        <label><input type="checkbox" id="in_tree_dripline"> Inside a tree drip line</label>
+        <label><input type="checkbox" id="near_signal"> Within 500 ft of a signal</label>
+        <label><input type="checkbox" id="emergency"> Emergency work</label>
+      </div>
+      <div class="two">
+        <label>Pavement age (yrs)
+          <input type="number" id="pavement_age_years" min="0" value="10">
+        </label>
+        <label>Disturbed acres
+          <input type="number" id="disturbed_acres" min="0" step="0.1" value="0">
+        </label>
+      </div>
+      <div class="drop" id="drop">
+        <b>Check your own packet</b>
+        <span>Drop your packet files here, or pick them. Only the file names are read. Nothing is uploaded.</span>
+        <div class="row">
+          <button type="button" id="pick-files">Choose files</button>
+          <button type="button" id="pick-folder">Choose a folder</button>
+        </div>
+        <input type="file" id="file-input" multiple hidden>
+        <input type="file" id="folder-input" webkitdirectory multiple hidden>
+        <span id="drop-note"></span>
+      </div>
+      <label>Files in the packet, one per line
+        <textarea id="files" rows="7">ROW_Permit_Application_signed.pdf
+Elm_St_Construction_Plans_11x17.pdf
+Elm_St_Profile_Sheets.pdf
+TCP_Phase1_Phase2.pdf
+Contractor_List.pdf
+Site_Photos.zip</textarea>
+      </label>
+    </form>
+
+    <main class="results">
+      <section class="summary" id="summary" aria-live="polite"></section>
+      <section class="panel" id="checklist"></section>
+      <section class="panel">
+        <h2>Cover letter draft</h2>
+        <pre class="letter" id="letter"></pre>
+        <div class="row">
+          <button type="button" id="copy">Copy letter</button>
+          <button type="button" class="primary ai" id="polish" hidden>Tighten with Claude</button>
+          <button type="button" class="ai" id="reset" hidden>Back to the plain draft</button>
+          <span class="note" id="letter-note"></span>
+        </div>
+      </section>
+      <section class="panel ai" id="ask-panel" hidden>
+        <h2>Ask about this city's rules</h2>
+        <p class="note">Claude answers only from the requirements loaded on this page and names the ones it used.</p>
+        <label>Your question
+          <input type="text" id="question" value="Do I need a bond for a 640 ft bore, and how much?">
+        </label>
+        <div class="row"><button type="button" class="primary" id="ask">Ask</button></div>
+        <div class="answer" id="answer" hidden></div>
+      </section>
+      <p class="note">A demonstration, not legal advice. Rules were read from public city sources on the date shown and cities change them. Matching is by file name, so it catches a missing exhibit and does not judge what is inside a file. Business-day counts skip weekends and ignore holidays. Example names and addresses are made up.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+const CITIES = /*__DATA__*/;
+/*__LOGIC__*/
+
+const $ = (id) => document.getElementById(id);
+const LABELS = { prerequisite: "Before you apply", document: "In the packet", notice: "Notices", timing: "Timing", field: "In the field", option: "Worth knowing" };
+const BOOLS = ["new_facility", "lane_closure", "sidewalk_closure", "pavement_cut", "in_tree_dripline", "near_signal", "emergency"];
+let plainLetter = "", current = null;
+
+function iso(d) { return d.toISOString().slice(0, 10); }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+
+function readJob() {
+  const job = { city: $("city").value, location: $("location").value.trim(), method: $("method").value,
+    street_class: $("street_class").value, length_ft: Number($("length_ft").value) || 0,
+    pavement_age_years: Number($("pavement_age_years").value) || 0, disturbed_acres: Number($("disturbed_acres").value) || 0,
+    start_date: $("start_date").value, facility_owner: "Example Fiber LLC", contact: "permits@example.com" };
+  for (const b of BOOLS) job[b] = $(b).checked;
+  return job;
+}
+
+function stat(kind, big, small) { const s = el("div", "stat " + kind); s.append(el("b", "", big), el("span", "", small)); return s; }
+
+function render() {
+  const job = readJob(), city = CITIES[job.city];
+  const checklist = buildChecklist(city, job);
+  const files = $("files").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  const packet = checkPacket(checklist, files);
+  const lead = leadTimeCheck(checklist, $("submit_date").value, job.start_date);
+  current = { job, city, checklist, packet };
+  $("reviewed").textContent = city.reviewed;
+
+  const sum = $("summary"); sum.replaceChildren();
+  sum.append(stat("plain", String(checklist.length), "requirements apply to this job"));
+  sum.append(packet.missing.length
+    ? stat("bad", String(packet.missing.length), packet.missing.length === 1 ? "document missing from the packet" : "documents missing from the packet")
+    : stat("good", "0", "documents missing from the packet"));
+  if (lead) sum.append(stat(lead.ok ? "good" : "bad", lead.have + " of " + lead.needed, lead.ok ? "business days of lead time: enough" : "business days of lead time: too late"));
+  else sum.append(stat("warn", "None", job.emergency ? "standard lead time: emergency rules apply" : "stated submittal lead time for this city"));
+
+  const missing = new Set(packet.missing.map((m) => m.id)), found = new Set(packet.found.map((m) => m.id));
+  const box = $("checklist"); box.replaceChildren();
+  box.append(el("h2", "", city.city + ": " + city.permit_name));
+  box.append(el("p", "note", "Filed through: " + city.portal + "."));
+  for (const kind of Object.keys(LABELS)) {
+    const rows = checklist.filter((r) => r.kind === kind);
+    if (!rows.length) continue;
+    const g = el("div", "group"); g.append(el("h3", "", LABELS[kind]));
+    for (const r of rows) {
+      const row = el("div", "req");
+      row.append(el("div", "id", r.id));
+      const mid = el("div"); mid.append(el("div", "t", r.title), el("div", "d", r.detail));
+      const s = el("div", "s"); const a = el("a", "", r.source.label + ", " + r.source.cite);
+      a.href = r.source.url; a.target = "_blank"; a.rel = "noopener"; s.append(a); mid.append(s);
+      row.append(mid);
+      if (missing.has(r.id)) row.append(el("span", "pill bad", "Missing"));
+      else if (found.has(r.id)) row.append(el("span", "pill good", "In packet"));
+      else if (r.closeout) row.append(el("span", "pill warn", "At closeout"));
+      else row.append(el("span"));
+      g.append(row);
+    }
+    box.append(g);
+  }
+  if (packet.unmatched.length) box.append(el("p", "unmatched", "Not matched to any requirement: " + packet.unmatched.join(", ")));
+
+  plainLetter = draftCoverLetter(city, job, checklist, packet);
+  $("letter").textContent = plainLetter;
+  $("letter-note").textContent = "";
+  $("reset").hidden = true;
+}
+
+function init() {
+  for (const slug of Object.keys(CITIES)) { const o = el("option", "", CITIES[slug].city); o.value = slug; $("city").append(o); }
+  const today = new Date(), start = new Date(today.getTime() + 21 * 86400000);
+  $("submit_date").value = iso(today); $("start_date").value = iso(start);
+  $("job").addEventListener("input", render);
+  $("job").addEventListener("submit", (e) => e.preventDefault());
+  $("copy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("letter").textContent); $("letter-note").textContent = "Copied."; }
+    catch (e) { $("letter-note").textContent = "Copy was blocked. Select the text and copy it by hand."; }
+  });
+  const useFiles = (list) => {
+    const names = Array.from(list).map((f) => f.name).filter((n) => n && !n.startsWith("."));
+    if (!names.length) return;
+    $("files").value = names.join("\n");
+    $("drop-note").textContent = names.length + (names.length === 1 ? " file loaded." : " files loaded.");
+    render();
+  };
+  $("pick-files").addEventListener("click", () => $("file-input").click());
+  $("pick-folder").addEventListener("click", () => $("folder-input").click());
+  $("file-input").addEventListener("change", (e) => useFiles(e.target.files));
+  $("folder-input").addEventListener("change", (e) => useFiles(e.target.files));
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => useFiles(e.dataTransfer.files));
+  render();
+  lightUpClaude();
+}
+
+async function lightUpClaude() {
+  let sample = null;
+  try { if (window.claude && typeof window.claude.use === "function") sample = await window.claude.use("sample"); } catch (e) { sample = null; }
+  if (!sample) return;
+  const aiOff = () => document.querySelectorAll(".ai").forEach((n) => { n.hidden = true; });
+  $("polish").hidden = false; $("ask-panel").hidden = false;
+
+  $("polish").addEventListener("click", async () => {
+    const btn = $("polish"); btn.disabled = true; $("letter-note").textContent = "Claude is rewriting the draft.";
+    const prompt = "Rewrite this permit cover letter so a city reviewer can read it in thirty seconds. Keep every fact, date, quantity and enclosure exactly as written, including any [NOT YET IN PACKET] flags. Add nothing. Plain business English, no sales language. Return only the letter.\n\n" + plainLetter;
+    try {
+      const out = await sample(prompt, { modelTier: "quick", cache: false, onText: ({ text }) => { $("letter").textContent = text; } });
+      $("letter").textContent = out.text; $("letter-note").textContent = "Rewritten by Claude. Check it against the plain draft."; $("reset").hidden = false;
+    } catch (err) {
+      $("letter").textContent = plainLetter;
+      if (err && err.code === "not_granted") aiOff();
+      $("letter-note").textContent = err && err.code === "rate_limited" ? "Claude is busy. Try again in a minute." : "Claude could not rewrite the letter. The plain draft is unchanged.";
+    } finally { btn.disabled = false; }
+  });
+  $("reset").addEventListener("click", () => { $("letter").textContent = plainLetter; $("reset").hidden = true; $("letter-note").textContent = ""; });
+
+  $("ask").addEventListener("click", async () => {
+    const q = $("question").value.trim(); if (!q) return;
+    const btn = $("ask"), ans = $("answer"); btn.disabled = true; ans.hidden = false; ans.textContent = "Reading the rules.";
+    const rules = current.city.requirements.map((r) => ({ id: r.id, kind: r.kind, title: r.title, detail: r.detail, source: r.source.label + ", " + r.source.cite }));
+    const prompt = "You answer questions about " + current.city.city + " right-of-way permit rules for a fiber contractor.\n" +
+      "Use only the requirements in the JSON below. After each claim, give the requirement id in square brackets. " +
+      "If the requirements do not answer the question, say so plainly and suggest asking the city. Do not guess amounts or dates. Keep it under 120 words. Plain text, no markdown.\n\n" +
+      "Requirements:\n" + JSON.stringify(rules) + "\n\nJob:\n" + JSON.stringify(current.job) + "\n\nQuestion: " + q;
+    try {
+      const out = await sample(prompt, { modelTier: "default", cache: false, onText: ({ text }) => { ans.textContent = text; } });
+      ans.textContent = out.text;
+    } catch (err) {
+      if (err && err.code === "not_granted") { aiOff(); return; }
+      ans.textContent = err && err.code === "rate_limited" ? "Claude is busy. Try again in a minute." : "Claude could not answer just now.";
+    } finally { btn.disabled = false; }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

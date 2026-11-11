@@ -1,0 +1,16 @@
+{
+  "city": "dallas",
+  "facility_owner": "Example Fiber LLC",
+  "contractor": "Example Boring Co.",
+  "location": "Elm St from N Akard St to N Ervay St",
+  "description": "Two 1.25-inch conduits with one 144-count cable, tying an existing handhole to a building entrance.",
+  "method": "bore",
+  "length_ft": 640,
+  "new_facility": true,
+  "pavement_cut": false,
+  "lane_closure": true,
+  "sidewalk_closure": true,
+  "street_class": "downtown",
+  "start_date": "2026-12-01",
+  "contact": "permits@example.com"
+}

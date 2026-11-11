@@ -1,0 +1,321 @@
+{
+  "city": "Dallas",
+  "slug": "dallas",
+  "permit_name": "Right-of-Way Permit",
+  "portal": "Right-of-Way Permit Management System",
+  "reviewed": "2026-11-11",
+  "requirements": [
+    {
+      "id": "DAL-REG",
+      "kind": "prerequisite",
+      "title": "Company registered in the ROW Management System",
+      "detail": "The facility owner must be registered with the City before a permit can be submitted, and the application goes in through the online system.",
+      "when": null,
+      "source": {
+        "label": "Dallas ROW application information form",
+        "cite": "Applicant information",
+        "url": "https://dallas.gov/departments/public-works/DCH%20Documents/Public%20Works/pdf/Additional%20Required%20Information%20Form%20for%20Network%20Node%20Node%20Support%20Pole%20August%202018.pdf"
+      }
+    },
+    {
+      "id": "DAL-APP",
+      "kind": "document",
+      "title": "Permit application signed by the facility owner",
+      "detail": "Written application on the director's form, signed by the owner of the facility.",
+      "when": null,
+      "match": [
+        "application",
+        "permit form"
+      ],
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(1)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-SUBS",
+      "kind": "document",
+      "title": "List of every contractor and subcontractor",
+      "detail": "No contractor or subcontractor may work in the right-of-way unless named on the permit for that project.",
+      "when": null,
+      "match": [
+        "contractor",
+        "subcontractor"
+      ],
+      "source": {
+        "label": "Dallas ROW application information form",
+        "cite": "Contractor section",
+        "url": "https://dallas.gov/departments/public-works/DCH%20Documents/Public%20Works/pdf/Additional%20Required%20Information%20Form%20for%20Network%20Node%20Node%20Support%20Pole%20August%202018.pdf"
+      }
+    },
+    {
+      "id": "DAL-LEAD",
+      "kind": "timing",
+      "title": "Submit at least 3 business days before construction",
+      "detail": "Standard projects need three business days. A project the City treats as major needs enough lead for 30 business days of review.",
+      "when": {
+        "field": "emergency",
+        "op": "eq",
+        "value": false
+      },
+      "lead_business_days": 3,
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(2), (c)(3)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-UG",
+      "kind": "document",
+      "title": "Underground facility statement",
+      "detail": "Statement that available plans for City and other underground utilities were collected, the design avoids apparent conflicts, and locations will be field-verified.",
+      "when": {
+        "any": [
+          {
+            "field": "method",
+            "op": "in",
+            "value": [
+              "bore",
+              "trench"
+            ]
+          },
+          {
+            "field": "pavement_cut",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "match": [
+        "underground",
+        "utility statement",
+        "conflict"
+      ],
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(4)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-PLANS",
+      "kind": "document",
+      "title": "Construction plans, 11x17, plan view at 1\" = 40' or larger",
+      "detail": "Show horizontal and vertical alignment. Each sheet carries the project number, lettering at least 1/8\" high, and a note to verify underground utilities 100 ft before crossings and where running parallel within 5 ft. Engineer's seal where state law requires one.",
+      "when": null,
+      "match": [
+        "plan",
+        "drawing",
+        "design"
+      ],
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(6)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      },
+      "exclude": [
+        "traffic",
+        "tcp"
+      ]
+    },
+    {
+      "id": "DAL-PROFILE",
+      "kind": "document",
+      "title": "Profile views at 1\" = 6' or larger",
+      "detail": "Required for certain major projects: central business district, street intersections, or facility crossings.",
+      "when": {
+        "field": "street_class",
+        "op": "eq",
+        "value": "downtown"
+      },
+      "match": [
+        "profile"
+      ],
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(6)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-TCP",
+      "kind": "document",
+      "title": "Traffic control plan for each phase of work",
+      "detail": "Detailed drawings for vehicle and pedestrian traffic in every phase, including detours and crosswalk closures. The City must approve it before work starts. A separate traffic control permit applies when a lane, sidewalk or alley is blocked.",
+      "when": {
+        "any": [
+          {
+            "field": "lane_closure",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "sidewalk_closure",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      },
+      "match": [
+        "tcp",
+        "traffic control",
+        "traffic"
+      ],
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(19)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-WAIVER",
+      "kind": "option",
+      "title": "Traffic control plan waiver may apply",
+      "detail": "On local residential streets, franchise utilities may be able to use the City's waiver form in place of a formal plan. Work must still follow the Traffic Barricade Manual and TMUTCD.",
+      "when": {
+        "all": [
+          {
+            "any": [
+              {
+                "field": "lane_closure",
+                "op": "eq",
+                "value": true
+              },
+              {
+                "field": "sidewalk_closure",
+                "op": "eq",
+                "value": true
+              }
+            ]
+          },
+          {
+            "field": "street_class",
+            "op": "eq",
+            "value": "residential"
+          }
+        ]
+      },
+      "source": {
+        "label": "Dallas Temporary Traffic Control Approval Waiver",
+        "cite": "Form text",
+        "url": "https://dallascityhall.com/departments/transportation/DCH%20Documents/Standards/Temporary%20Traffic%20Control%20Permit%20Waiver%20Revised.pdf"
+      }
+    },
+    {
+      "id": "DAL-NOTICE",
+      "kind": "notice",
+      "title": "Pre-construction notice completed and affirmed",
+      "detail": "The application must affirm that pre-construction notice requirements were met.",
+      "when": null,
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(20)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-BOND",
+      "kind": "document",
+      "title": "Performance bond, letter of credit or cash deposit",
+      "detail": "Required before the permit issues for pavement excavation or boring that installs a new facility or significantly relocates one. Amount is at least 100% of the City's estimate of repair cost. Localized service lines and repairs are exempt.",
+      "when": {
+        "all": [
+          {
+            "field": "new_facility",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "any": [
+              {
+                "field": "method",
+                "op": "in",
+                "value": [
+                  "bore",
+                  "trench"
+                ]
+              },
+              {
+                "field": "pavement_cut",
+                "op": "eq",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "match": [
+        "bond",
+        "letter of credit",
+        "surety"
+      ],
+      "source": {
+        "label": "Dallas City Code Sec. 43-140.1",
+        "cite": "Performance bond",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121557"
+      }
+    },
+    {
+      "id": "DAL-BORE",
+      "kind": "field",
+      "title": "Boring conditions on site",
+      "detail": "Keep current plans at the site, pothole water mains where required, and be able to give the bore head location on request.",
+      "when": {
+        "field": "method",
+        "op": "eq",
+        "value": "bore"
+      },
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(15)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-START",
+      "kind": "timing",
+      "title": "Start within 60 calendar days of issuance",
+      "detail": "The permit is void if construction has not begun. Ask for an extension before it expires.",
+      "when": null,
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(g)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-TEMP",
+      "kind": "field",
+      "title": "Temporary pavement repairs out within 14 calendar days",
+      "detail": "Temporary repairs may not stay in the right-of-way longer without an extension granted before the limit runs out.",
+      "when": {
+        "field": "pavement_cut",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(f)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    },
+    {
+      "id": "DAL-EMERG",
+      "kind": "notice",
+      "title": "Emergency work: notify the director immediately",
+      "detail": "Emergency work may begin without the standard lead time, with immediate notice that states the reasons.",
+      "when": {
+        "field": "emergency",
+        "op": "eq",
+        "value": true
+      },
+      "source": {
+        "label": "Dallas City Code, Ch. 43, Art. VIII, permit section",
+        "cite": "(c)(2)",
+        "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"
+      }
+    }
+  ]
+}
