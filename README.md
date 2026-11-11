@@ -13,7 +13,9 @@ Every requirement carries the ordinance section or form page it came from, so a 
 
 **Cities so far:** Dallas, Fort Worth, Richardson.
 
-**Live demo:** https://claude.ai/artifact/5kxrhPYoBvTFStFXJmTrqV
+**Live demo:** https://tochoby.github.io/permit-packet-copilot/ (opens for anyone, no account needed)
+
+The same page [on Claude](https://claude.ai/artifact/5kxrhPYoBvTFStFXJmTrqV) adds two AI features for signed-in viewers: tightening the cover letter and answering questions about a city's rules.
 
 ## Try it
 
@@ -101,6 +103,7 @@ Sixteen tests. One of them runs the browser logic in Node and checks it gives th
 copilot/        rules, packet check, cover letter, extraction, CLI
 data/cities/    one JSON file per city
 demo/           browser version (build with: python demo/build.py)
+docs/           the built page, served by GitHub Pages
 examples/       a sample job and packet folder
 tests/
 ```

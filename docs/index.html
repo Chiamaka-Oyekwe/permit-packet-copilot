@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permit Packet Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the street is the hero. A live plan-view strip of the job sits on an asphalt band;
+   the packet check reads below it like a marked-up submittal. Orange is the locate-paint color for fiber. */
+:root {
+  --paper: #edeee9;
+  --sheet: #ffffff;
+  --ink: #1a1e21;
+  --muted: #5b6468;
+  --line: #d5d8d1;
+  --fiber: #f26a1b;
+  --fiber-text: #b3440a;
+  --good: #1c7a4a; --good-bg: #e2f2e8;
+  --bad: #b3261e; --bad-bg: #fbe7e4;
+  --warn: #8a6200; --warn-bg: #f8eecb;
+  --road: #17191b; --road-ink: #f1efe8; --road-muted: #a9aca6; --road-line: #34393c;
+  --asphalt: #2b2f32; --lane: #e9e6dc; --center: #e3b53a; --concrete: #b4b6ae; --grass: #56664f;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111315; --sheet: #1b1f22; --ink: #ecede7; --muted: #a0a7a8; --line: #2f3539;
+    --fiber: #ff7b2e; --fiber-text: #ff9a5c;
+    --good: #6dd39c; --good-bg: #16352a; --bad: #ff9085; --bad-bg: #3f1b18; --warn: #e9c45c; --warn-bg: #3a2f10;
+    --road: #0b0c0d; --road-line: #2a2e31;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111315; --sheet: #1b1f22; --ink: #ecede7; --muted: #a0a7a8; --line: #2f3539;
+  --fiber: #ff7b2e; --fiber-text: #ff9a5c;
+  --good: #6dd39c; --good-bg: #16352a; --bad: #ff9085; --bad-bg: #3f1b18; --warn: #e9c45c; --warn-bg: #3a2f10;
+  --road: #0b0c0d; --road-line: #2a2e31;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 15px/1.55 var(--body); }
+h1, h2, h3, p { margin: 0; }
+h1, h2 { font-family: var(--display); font-weight: 800; text-transform: uppercase; text-wrap: balance; line-height: 0.95; }
+a { color: var(--fiber-text); text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--fiber); outline-offset: 2px; }
+
+/* Hero */
+.hero { background: var(--road); color: var(--road-ink); border-bottom: 6px solid var(--fiber); }
+.hero-in { max-width: 1200px; margin: 0 auto; padding: 28px 20px 26px; display: grid; gap: 22px; }
+.hero-top { display: grid; grid-template-columns: 1fr auto; gap: 16px 32px; align-items: end; }
+.eyebrow { font: 600 11.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fiber); display: flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ""; width: 26px; height: 3px; background: var(--fiber); }
+h1 { font-size: clamp(44px, 7.4vw, 92px); letter-spacing: 0.005em; margin-top: 10px; }
+h1 em { font-style: normal; color: var(--fiber); }
+.lede { color: var(--road-muted); max-width: 56ch; font-size: 16px; margin-top: 12px; }
+.byline { font: 400 12px/1.7 var(--mono); color: var(--road-muted); text-align: right; }
+.byline b { color: var(--road-ink); font-weight: 600; }
+.byline a { color: var(--fiber); }
+.strip-wrap { border: 1px solid var(--road-line); background: #101213; overflow-x: auto; }
+svg.strip { display: block; width: 100%; min-width: 620px; height: auto; }
+.strip text { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--lane); }
+.strip .dim { fill: var(--fiber); font-weight: 600; font-size: 13px; }
+.strip .faint { fill: #8d918a; font-size: 9.5px; }
+@keyframes reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.strip .reveal-rect { transform-box: fill-box; transform-origin: left center; }
+.strip.draw .reveal-rect { animation: reveal 1.1s cubic-bezier(.3,.7,.2,1) both; }
+
+/* Body */
+.wrap { max-width: 1200px; margin: 0 auto; padding: 22px 20px 56px; display: grid; grid-template-columns: 340px 1fr; gap: 22px; align-items: start; }
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: grid; gap: 14px; }
+.rail { position: sticky; top: 14px; }
+h2 { font-size: 26px; letter-spacing: 0.02em; }
+.kicker { font: 600 11px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+label.f { display: grid; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
+input[type=text], input[type=number], input[type=date], select, textarea {
+  font: 400 14.5px/1.4 var(--body); color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 3px; padding: 8px 9px; width: 100%;
+}
+textarea { font: 400 12.5px/1.6 var(--mono); resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+legend { padding: 0; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; }
+.seg label { position: relative; }
+.seg span { display: block; text-align: center; padding: 9px 4px; font: 600 13px/1 var(--body); cursor: pointer; border-left: 1px solid var(--ink); }
+.seg label:first-child span { border-left: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips label { position: relative; }
+.chips span { display: inline-block; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; cursor: pointer; background: var(--paper); user-select: none; }
+.seg input, .chips input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg input:checked + span { background: var(--ink); color: var(--sheet); }
+.chips input:checked + span { background: var(--fiber); border-color: var(--fiber); color: #1a1205; font-weight: 600; }
+.seg input:focus-visible + span, .chips input:focus-visible + span { outline: 2px solid var(--fiber); outline-offset: 2px; }
+.drop { display: grid; gap: 8px; border: 1.5px dashed var(--fiber); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--muted); background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--fiber) 7%, transparent) 14px 28px); }
+.drop b { color: var(--ink); font-size: 14px; }
+.drop.over { background: var(--good-bg); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 13px/1 var(--body); padding: 10px 13px; border-radius: 3px; border: 1px solid var(--ink); background: var(--sheet); color: var(--ink); cursor: pointer; }
+button:hover { background: var(--paper); }
+button.primary { background: var(--ink); color: var(--sheet); }
+button.primary:hover { background: var(--fiber); border-color: var(--fiber); color: #1a1205; }
+button:disabled { opacity: 0.55; cursor: progress; }
+
+.results { display: grid; gap: 22px; min-width: 0; }
+.board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--sheet); overflow: hidden; }
+.stat { padding: 16px 18px 14px; border-left: 1px solid var(--line); display: grid; gap: 4px; position: relative; }
+.stat:first-child { border-left: 0; }
+.stat::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--tone, var(--ink)); }
+.stat b { font: 800 54px/0.9 var(--display); font-variant-numeric: tabular-nums; color: var(--tone, var(--ink)); }
+.stat b small { font-size: 26px; color: var(--muted); }
+.stat span { font-size: 13px; color: var(--muted); }
+.stat.good { --tone: var(--good); } .stat.bad { --tone: var(--bad); } .stat.warn { --tone: var(--warn); }
+.head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; }
+.group { display: grid; }
+.group-h { display: flex; align-items: center; gap: 10px; padding: 14px 0 8px; }
+.group-h::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.count { font: 600 11px/1 var(--mono); color: var(--muted); }
+.req { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; padding: 12px 12px 12px 14px; border-left: 4px solid var(--line); margin-bottom: 6px; background: color-mix(in srgb, var(--paper) 55%, var(--sheet)); border-radius: 0 3px 3px 0; }
+.req.is-missing { border-left-color: var(--bad); background: var(--bad-bg); }
+.req.is-found { border-left-color: var(--good); }
+.req .id { font: 600 10.5px/1 var(--mono); letter-spacing: 0.08em; color: var(--muted); margin-bottom: 5px; }
+.req .t { font-weight: 700; font-size: 15.5px; line-height: 1.3; }
+.req .d { color: var(--muted); font-size: 14px; max-width: 70ch; margin-top: 3px; }
+.req .s { font-size: 12.5px; margin-top: 5px; }
+.pill { align-self: start; font: 700 10.5px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 8px; border-radius: 2px; white-space: nowrap; }
+.pill.good { background: var(--good-bg); color: var(--good); } .pill.bad { background: var(--bad); color: #fff; } .pill.warn { background: var(--warn-bg); color: var(--warn); }
+.letter { margin: 0; white-space: pre-wrap; font: 400 14.5px/1.65 var(--body); background: var(--sheet); border: 1px solid var(--line); border-top: 5px solid var(--ink); padding: 26px 28px; box-shadow: 0 10px 24px -18px rgba(0,0,0,.5); max-width: 74ch; overflow-x: auto; }
+.note { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.unmatched { font: 400 12px/1.6 var(--mono); color: var(--muted); }
+.ai[hidden] { display: none; }
+.answer { white-space: pre-wrap; background: var(--paper); border-left: 4px solid var(--fiber); padding: 12px 14px; font-size: 14.5px; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; } .rail { position: static; }
+  .hero-top { grid-template-columns: 1fr; } .byline { text-align: left; }
+  .board { grid-template-columns: 1fr; } .stat { border-left: 0; border-top: 1px solid var(--line); } .stat:first-child { border-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .strip.draw .reveal-rect { animation: none; } }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-in">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">Right-of-way permits for fiber</div>
+        <h1>Permit Packet <em>Copilot</em></h1>
+        <p class="lede">Describe the job, load your packet, and see what the city will ask for that you have not attached. Every requirement links to the ordinance or form it came from.</p>
+      </div>
+      <div class="byline">
+        <div><b>Chiamaka Oyekwe</b></div>
+        <div>Dallas · Fort Worth · Richardson</div>
+        <div>Rules read <span id="reviewed"></span></div>
+        <div><a href="https://github.com/tochoby/permit-packet-copilot" target="_blank" rel="noopener">Source on GitHub</a></div>
+      </div>
+    </div>
+    <div class="strip-wrap">
+      <svg class="strip" id="strip" viewBox="0 0 1000 236" role="img" aria-labelledby="strip-title">
+        <title id="strip-title">Plan view of the job</title>
+        <defs>
+          <pattern id="hatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="12" fill="#f26a1b" opacity="0.38"/></pattern>
+          <pattern id="cut" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H7M0 0V7" stroke="#e9e6dc" stroke-width="1" opacity="0.75"/></pattern>
+          <pattern id="barr" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="10" height="10" fill="#f4f1e8"/><rect width="5" height="10" fill="#f26a1b"/></pattern>
+          <clipPath id="reveal"><rect class="reveal-rect" x="0" y="0" width="1000" height="236"/></clipPath>
+        </defs>
+        <g id="strip-g"></g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <form class="panel rail" id="job" autocomplete="off">
+    <div class="kicker">Step 1</div>
+    <h2>The job</h2>
+    <label class="f">City
+      <select id="city"></select>
+    </label>
+    <label class="f">Location
+      <input type="text" id="location" value="Elm St from N Akard St to N Ervay St">
+    </label>
+    <fieldset>
+      <legend>Method</legend>
+      <div class="seg">
+        <label><input type="radio" name="method" id="m-bore" value="bore" checked><span>Bore</span></label>
+        <label><input type="radio" name="method" id="m-trench" value="trench"><span>Trench</span></label>
+        <label><input type="radio" name="method" id="m-aerial" value="aerial"><span>Aerial</span></label>
+      </div>
+    </fieldset>
+    <div class="two">
+      <label class="f">Length (ft)
+        <input type="number" id="length_ft" min="0" value="640">
+      </label>
+      <label class="f">Street type
+        <select id="street_class"><option value="residential">Residential</option><option value="collector">Collector</option><option value="arterial">Arterial</option><option value="downtown" selected>Downtown</option></select>
+      </label>
+    </div>
+    <div class="two">
+      <label class="f">Submitting on
+        <input type="date" id="submit_date">
+      </label>
+      <label class="f">Work starts
+        <input type="date" id="start_date">
+      </label>
+    </div>
+    <fieldset>
+      <legend>Conditions</legend>
+      <div class="chips">
+        <label><input type="checkbox" id="new_facility" checked><span>New facility</span></label>
+        <label><input type="checkbox" id="lane_closure" checked><span>Lane closure</span></label>
+        <label><input type="checkbox" id="sidewalk_closure" checked><span>Sidewalk closure</span></label>
+        <label><input type="checkbox" id="pavement_cut"><span>Pavement cut</span></label>
+        <label><input type="checkbox" id="in_tree_dripline"><span>Tree drip line</span></label>
+        <label><input type="checkbox" id="near_signal"><span>Signal within 500 ft</span></label>
+        <label><input type="checkbox" id="emergency"><span>Emergency</span></label>
+      </div>
+    </fieldset>
+    <div class="two">
+      <label class="f">Pavement age (yrs)
+        <input type="number" id="pavement_age_years" min="0" value="10">
+      </label>
+      <label class="f">Disturbed acres
+        <input type="number" id="disturbed_acres" min="0" step="0.1" value="0">
+      </label>
+    </div>
+    <div class="kicker" style="margin-top:6px">Step 2</div>
+    <h2>Your packet</h2>
+    <div class="drop" id="drop">
+      <b>Drop your packet files here</b>
+      <span>Only the file names are read. Nothing is uploaded.</span>
+      <div class="row">
+        <button type="button" id="pick-files">Choose files</button>
+        <button type="button" id="pick-folder">Choose a folder</button>
+      </div>
+      <input type="file" id="file-input" multiple hidden>
+      <input type="file" id="folder-input" webkitdirectory multiple hidden>
+      <span id="drop-note"></span>
+    </div>
+    <label class="f">Or type file names, one per line
+      <textarea id="files" rows="7">ROW_Permit_Application_signed.pdf
+Elm_St_Construction_Plans_11x17.pdf
+Elm_St_Profile_Sheets.pdf
+TCP_Phase1_Phase2.pdf
+Contractor_List.pdf
+Site_Photos.zip</textarea>
+    </label>
+  </form>
+
+  <main class="results">
+    <section class="board" id="summary" aria-live="polite"></section>
+    <section class="panel" id="checklist"></section>
+    <section class="panel">
+      <div class="kicker">Ready to send</div>
+      <h2>Cover letter draft</h2>
+      <pre class="letter" id="letter"></pre>
+      <div class="row">
+        <button type="button" id="copy">Copy letter</button>
+        <button type="button" class="primary ai" id="polish" hidden>Tighten with Claude</button>
+        <button type="button" class="ai" id="reset" hidden>Back to the plain draft</button>
+        <span class="note" id="letter-note"></span>
+      </div>
+    </section>
+    <section class="panel ai" id="ask-panel" hidden>
+      <div class="kicker">Ask Claude</div>
+      <h2>Question about this city's rules</h2>
+      <p class="note">Claude answers only from the requirements loaded on this page and names the ones it used.</p>
+      <label class="f">Your question
+        <input type="text" id="question" value="Do I need a bond for a 640 ft bore, and how much?">
+      </label>
+      <div class="row"><button type="button" class="primary" id="ask">Ask</button></div>
+      <div class="answer" id="answer" hidden></div>
+    </section>
+    <p class="note">A demonstration, not legal advice. Rules were read from public city sources on the date shown and cities change them. Matching is by file name, so it catches a missing exhibit and does not judge what is inside a file. Business-day counts skip weekends and ignore holidays. The street drawing is a schematic, not to scale. Example names and addresses are made up.</p>
+  </main>
+</div>
+
+<script>
+const CITIES = {"dallas": {"city": "Dallas", "slug": "dallas", "permit_name": "Right-of-Way Permit", "portal": "Right-of-Way Permit Management System", "reviewed": "2026-11-11", "requirements": [{"id": "DAL-REG", "kind": "prerequisite", "title": "Company registered in the ROW Management System", "detail": "The facility owner must be registered with the City before a permit can be submitted, and the application goes in through the online system.", "when": null, "source": {"label": "Dallas ROW application information form", "cite": "Applicant information", "url": "https://dallas.gov/departments/public-works/DCH%20Documents/Public%20Works/pdf/Additional%20Required%20Information%20Form%20for%20Network%20Node%20Node%20Support%20Pole%20August%202018.pdf"}}, {"id": "DAL-APP", "kind": "document", "title": "Permit application signed by the facility owner", "detail": "Written application on the director's form, signed by the owner of the facility.", "when": null, "match": ["application", "permit form"], "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(1)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-SUBS", "kind": "document", "title": "List of every contractor and subcontractor", "detail": "No contractor or subcontractor may work in the right-of-way unless named on the permit for that project.", "when": null, "match": ["contractor", "subcontractor"], "source": {"label": "Dallas ROW application information form", "cite": "Contractor section", "url": "https://dallas.gov/departments/public-works/DCH%20Documents/Public%20Works/pdf/Additional%20Required%20Information%20Form%20for%20Network%20Node%20Node%20Support%20Pole%20August%202018.pdf"}}, {"id": "DAL-LEAD", "kind": "timing", "title": "Submit at least 3 business days before construction", "detail": "Standard projects need three business days. A project the City treats as major needs enough lead for 30 business days of review.", "when": {"field": "emergency", "op": "eq", "value": false}, "lead_business_days": 3, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(2), (c)(3)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-UG", "kind": "document", "title": "Underground facility statement", "detail": "Statement that available plans for City and other underground utilities were collected, the design avoids apparent conflicts, and locations will be field-verified.", "when": {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}, "match": ["underground", "utility statement", "conflict"], "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(4)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-PLANS", "kind": "document", "title": "Construction plans, 11x17, plan view at 1\" = 40' or larger", "detail": "Show horizontal and vertical alignment. Each sheet carries the project number, lettering at least 1/8\" high, and a note to verify underground utilities 100 ft before crossings and where running parallel within 5 ft. Engineer's seal where state law requires one.", "when": null, "match": ["plan", "drawing", "design"], "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(6)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}, "exclude": ["traffic", "tcp"]}, {"id": "DAL-PROFILE", "kind": "document", "title": "Profile views at 1\" = 6' or larger", "detail": "Required for certain major projects: central business district, street intersections, or facility crossings.", "when": {"field": "street_class", "op": "eq", "value": "downtown"}, "match": ["profile"], "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(6)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-TCP", "kind": "document", "title": "Traffic control plan for each phase of work", "detail": "Detailed drawings for vehicle and pedestrian traffic in every phase, including detours and crosswalk closures. The City must approve it before work starts. A separate traffic control permit applies when a lane, sidewalk or alley is blocked.", "when": {"any": [{"field": "lane_closure", "op": "eq", "value": true}, {"field": "sidewalk_closure", "op": "eq", "value": true}]}, "match": ["tcp", "traffic control", "traffic"], "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(19)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-WAIVER", "kind": "option", "title": "Traffic control plan waiver may apply", "detail": "On local residential streets, franchise utilities may be able to use the City's waiver form in place of a formal plan. Work must still follow the Traffic Barricade Manual and TMUTCD.", "when": {"all": [{"any": [{"field": "lane_closure", "op": "eq", "value": true}, {"field": "sidewalk_closure", "op": "eq", "value": true}]}, {"field": "street_class", "op": "eq", "value": "residential"}]}, "source": {"label": "Dallas Temporary Traffic Control Approval Waiver", "cite": "Form text", "url": "https://dallascityhall.com/departments/transportation/DCH%20Documents/Standards/Temporary%20Traffic%20Control%20Permit%20Waiver%20Revised.pdf"}}, {"id": "DAL-NOTICE", "kind": "notice", "title": "Pre-construction notice completed and affirmed", "detail": "The application must affirm that pre-construction notice requirements were met.", "when": null, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(20)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-BOND", "kind": "document", "title": "Performance bond, letter of credit or cash deposit", "detail": "Required before the permit issues for pavement excavation or boring that installs a new facility or significantly relocates one. Amount is at least 100% of the City's estimate of repair cost. Localized service lines and repairs are exempt.", "when": {"all": [{"field": "new_facility", "op": "eq", "value": true}, {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}]}, "match": ["bond", "letter of credit", "surety"], "source": {"label": "Dallas City Code Sec. 43-140.1", "cite": "Performance bond", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121557"}}, {"id": "DAL-BORE", "kind": "field", "title": "Boring conditions on site", "detail": "Keep current plans at the site, pothole water mains where required, and be able to give the bore head location on request.", "when": {"field": "method", "op": "eq", "value": "bore"}, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(15)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-START", "kind": "timing", "title": "Start within 60 calendar days of issuance", "detail": "The permit is void if construction has not begun. Ask for an extension before it expires.", "when": null, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(g)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-TEMP", "kind": "field", "title": "Temporary pavement repairs out within 14 calendar days", "detail": "Temporary repairs may not stay in the right-of-way longer without an extension granted before the limit runs out.", "when": {"field": "pavement_cut", "op": "eq", "value": true}, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(f)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}, {"id": "DAL-EMERG", "kind": "notice", "title": "Emergency work: notify the director immediately", "detail": "Emergency work may begin without the standard lead time, with immediate notice that states the reasons.", "when": {"field": "emergency", "op": "eq", "value": true}, "source": {"label": "Dallas City Code, Ch. 43, Art. VIII, permit section", "cite": "(c)(2)", "url": "https://codelibrary.amlegal.com/codes/dallas/latest/dallas_tx/0-0-0-121432"}}]}, "fort_worth": {"city": "Fort Worth", "slug": "fort_worth", "permit_name": "Street Use Franchise Utility Permit", "portal": "Accela Citizen Access", "reviewed": "2026-11-11", "requirements": [{"id": "FTW-APP", "kind": "document", "title": "Street Use Franchise Utility Permit application", "detail": "Filed online in Accela Citizen Access by a registered company.", "when": null, "match": ["application", "permit form"], "source": {"label": "Fort Worth UT permit submittal guide", "cite": "Step 5", "url": "https://www.fortworthtexas.gov/files/assets/public/v/1/tpw/documents/04-aca-how-to-create-an-application-ut-permit-submittal-process_1.pdf"}}, {"id": "FTW-PLANS", "kind": "document", "title": "Engineering plans with cover sheet", "detail": "Cover sheet with work limits, requested working days, a 24-hour contact and a table of contents. Show trenches, bores, right-of-way, curbs, driveways, sidewalks, landscaping and nearby utilities, with bore and trench lengths and depths. Engineer's name and the final date on every sheet.", "when": null, "match": ["plan", "drawing", "design"], "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.4", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}, "exclude": ["traffic", "tcp"]}, {"id": "FTW-LEAD", "kind": "timing", "title": "Plans in 10 working days before construction", "detail": "One electronic copy. Service-connection plans need 5 working days.", "when": {"field": "emergency", "op": "eq", "value": false}, "lead_business_days": 10, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.2, B.4", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-TCP", "kind": "document", "title": "Traffic control plan, formatted like the engineering plans", "detail": "Follows the current MUTCD. Downtown and arterial streets: one lane closed at most, 9:00 AM to 4:00 PM unless extended. Other streets: 7:00 AM to 6:00 PM.", "when": {"any": [{"field": "lane_closure", "op": "eq", "value": true}, {"field": "sidewalk_closure", "op": "eq", "value": true}]}, "match": ["tcp", "traffic control", "traffic"], "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.5, C", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-BOND", "kind": "document", "title": "Contractor bond and certificate of insurance", "detail": "The City's contractor requirements point to a $25,000 streets and storm drain contractor bond and a basic insurance sheet. Confirm current amounts with the City.", "when": null, "match": ["bond", "insurance", "coi"], "source": {"label": "Fort Worth Franchise Utility Permitting Guidelines", "cite": "Contractor requirements links", "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"}}, {"id": "FTW-SWPPP", "kind": "document", "title": "SWPPP, TCEQ coverage and grading permit", "detail": "Needed when the project disturbs 1.0 acre or more.", "when": {"field": "disturbed_acres", "op": "gte", "value": 1.0}, "match": ["swppp", "stormwater", "grading"], "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.6", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-DOOR", "kind": "notice", "title": "Doorhangers 7 days and 1 day before work", "detail": "Every resident on each block. Work cannot begin until they are delivered.", "when": null, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.9", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-48", "kind": "notice", "title": "48-hour customer, HOA and neighborhood notice", "detail": "Notice names the utility and contractor, a 24/7 contact, start date, type of work and expected duration. The policy and the guidelines page give different notice windows, so confirm which the inspector expects.", "when": null, "source": {"label": "Fort Worth Franchise Utility Permitting Guidelines", "cite": "Notice requirements", "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"}}, {"id": "FTW-SIGN", "kind": "notice", "title": "Project sign at each end, 48 hours before start", "detail": "Shows the expected timeline and work area. A contractor notification sign is also required.", "when": null, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.9", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-LOCATE", "kind": "field", "title": "Utility locates before construction", "detail": "Through Texas One-Call or equivalent. City water or sewer lines 16 inches or larger need hydro-excavation verification.", "when": {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.8", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-BORE", "kind": "field", "title": "Cross-street utilities must be bored", "detail": "Unless the director approves otherwise. Minimum cover is 42 inches under pavement and 24 inches in the parkway. Driveways should be bored where possible.", "when": {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "D.1 to D.5", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-TREE", "kind": "field", "title": "Bore under tree drip lines; no cutting roots 2 inches or larger", "detail": "No excavation, grading or storage inside the drip line. Cutting large roots on right-of-way trees needs City Forester approval first.", "when": {"field": "in_tree_dripline", "op": "eq", "value": true}, "source": {"label": "Fort Worth Franchise Utility Permitting Guidelines", "cite": "Property, trees and site conditions", "url": "https://www.fortworthtexas.gov/departments/tpw/development/cfw-departments-tpw-contractors"}}, {"id": "FTW-NEWPAVE", "kind": "prerequisite", "title": "Director approval to cut pavement under two years old", "detail": "Concrete needs full-slab replacement. Asphalt needs a 2-inch mill and overlay, curb to curb and block to block.", "when": {"all": [{"field": "pavement_cut", "op": "eq", "value": true}, {"field": "pavement_age_years", "op": "lt", "value": 2}]}, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "D.6", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-START", "kind": "timing", "title": "Start within 30 calendar days of approval", "detail": "Otherwise the permit is void. Extension requests are due 3 working days before it expires.", "when": null, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.2", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-ONSITE", "kind": "field", "title": "Permit, traffic control plan and plans kept on site", "detail": "A person who can make decisions must be on site while work is active.", "when": null, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.2", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-ASBUILT", "kind": "document", "title": "Red-lines within 30 days of each segment; as-builts within 30 days of completion", "detail": "As-builts are delivered as PDF. This is a closeout item, not part of the first submittal.", "when": null, "closeout": true, "match": ["as-built", "asbuilt", "redline"], "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "E", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}, {"id": "FTW-EMERG", "kind": "notice", "title": "Emergency work: notify and apply within 24 hours", "detail": "Include a written description. Temporary repairs become permanent within 14 calendar days.", "when": {"field": "emergency", "op": "eq", "value": true}, "source": {"label": "Fort Worth Utility Construction Policy (Res. 5082-05-2019)", "cite": "B.3, D.8", "url": "https://www.fortworthtexas.gov/files/assets/public/government/documents/resolution-5082-05-2019.pdf"}}]}, "richardson": {"city": "Richardson", "slug": "richardson", "permit_name": "Right-of-Way Construction Permit", "portal": "Email or in person at City Hall", "reviewed": "2026-11-11", "requirements": [{"id": "RIC-REG", "kind": "prerequisite", "title": "Registration form approved first", "detail": "The City will not take a permit application until registration is complete and approved.", "when": null, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Page 1", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-APP", "kind": "document", "title": "Application signed by owner, contractor and subcontractor", "detail": "All three sign and date. Each lists a contact and a 24-hour emergency phone. Describe the work with street names, termination points, and quantity of line and poles.", "when": null, "match": ["application", "permit form"], "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Pages 1 and 5", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-DIG", "kind": "prerequisite", "title": "DIG-TESS confirmation number on the application", "detail": "Needed when pavement is removed or excavation is required.", "when": {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Project details", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-PLANS", "kind": "document", "title": "Plans and maps, no larger than 11x17", "detail": "One digital copy, or five paper copies.", "when": null, "match": ["plan", "map", "drawing", "design"], "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Submittal items", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}, "exclude": ["traffic", "tcp"]}, {"id": "RIC-TCP", "kind": "document", "title": "Site-specific traffic control plan", "detail": "Shows a north arrow, street name and the area of construction, and follows the TMUTCD. Lane closures run weekdays 9:00 AM to 3:30 PM only.", "when": {"any": [{"field": "lane_closure", "op": "eq", "value": true}, {"field": "sidewalk_closure", "op": "eq", "value": true}]}, "match": ["tcp", "traffic control", "traffic"], "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Traffic control", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-VIDEO", "kind": "document", "title": "Video of the project limits, before and after", "detail": "In a City-approved format. The before video is due before work starts.", "when": null, "match": ["video", ".mp4", ".mov"], "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Video documentation", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-48", "kind": "notice", "title": "48-hour calls to inspection, traffic and water", "detail": "No work until all locates are marked in the field.", "when": null, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Notifications before work", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-SIGNAL", "kind": "notice", "title": "48-hour notice for work within 500 ft of a signal", "detail": "Call the Traffic Department before working near a signalized intersection.", "when": {"field": "near_signal", "op": "eq", "value": true}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Notifications before work", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-BORE", "kind": "field", "title": "Boring hours: Mon to Thu until 3:00 PM, Fri until noon", "detail": "No missile work. No weekend work unless the inspector approves.", "when": {"field": "method", "op": "eq", "value": "bore"}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Work restrictions", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-CONC", "kind": "notice", "title": "24-hour notice and mix design before placing concrete", "detail": "Call the Construction Inspection Office to schedule the inspection.", "when": {"field": "pavement_cut", "op": "eq", "value": true}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Notifications before work", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-RESTORE", "kind": "field", "title": "Backfill density, concrete strength and vegetation verified", "detail": "Provide verification of backfill densities and concrete strength, re-establish vegetation, and remove locate markings before closeout.", "when": {"any": [{"field": "method", "op": "in", "value": ["bore", "trench"]}, {"field": "pavement_cut", "op": "eq", "value": true}]}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Site requirements", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-START", "kind": "timing", "title": "Start within 30 days of issuance", "detail": "The permit is void if construction has not begun.", "when": null, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Timing and validity", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}, {"id": "RIC-EMERG", "kind": "notice", "title": "Emergency work: apply within one business day", "detail": "The application is due no later than one business day after work begins.", "when": {"field": "emergency", "op": "eq", "value": true}, "source": {"label": "Richardson ROW Construction Permit application (rev. 02/07/22)", "cite": "Timing and validity", "url": "https://cor.net/home/showpublisheddocument/366/637804267107030000"}}]}};
+// Same rules as copilot/rules.py, packet.py and narrative.py, for the browser demo.
+const JOB_DEFAULTS = {
+  method: "bore", new_facility: true, pavement_cut: false, lane_closure: false,
+  sidewalk_closure: false, street_class: "collector", disturbed_acres: 0,
+  pavement_age_years: 10, in_tree_dripline: false, near_signal: false, emergency: false,
+};
+
+function applies(when, job) {
+  if (when === null || when === undefined) return true;
+  if (when.all) return when.all.every((c) => applies(c, job));
+  if (when.any) return when.any.some((c) => applies(c, job));
+  const actual = job[when.field];
+  switch (when.op) {
+    case "eq": return actual === when.value;
+    case "in": return when.value.includes(actual);
+    case "lt": return actual !== null && actual !== undefined && actual < when.value;
+    case "gte": return actual !== null && actual !== undefined && actual >= when.value;
+    default: throw new Error("Unknown operator: " + when.op);
+  }
+}
+
+function buildChecklist(city, job) {
+  const full = Object.assign({}, JOB_DEFAULTS, job);
+  return city.requirements.filter((r) => applies(r.when, full));
+}
+
+function parseDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+function businessDaysBetween(startIso, endIso) {
+  const start = parseDate(startIso), end = parseDate(endIso);
+  let days = 0;
+  const d = new Date(start);
+  while (d < end) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    const wd = d.getUTCDay();
+    if (wd !== 0 && wd !== 6) days += 1;
+  }
+  return days;
+}
+
+function leadTimeCheck(checklist, submitIso, startIso) {
+  const needed = Math.max(0, ...checklist.map((r) => r.lead_business_days || 0));
+  if (!needed || !submitIso || !startIso) return null;
+  const have = businessDaysBetween(submitIso, startIso);
+  return { needed, have, ok: have >= needed };
+}
+
+const normalize = (s) => s.toLowerCase().replace(/[_-]/g, " ");
+
+function checkPacket(checklist, filenames) {
+  const names = filenames.map((f) => [f, normalize(f.split(/[\\/]/).pop())]);
+  const found = [], missing = [];
+  for (const req of checklist) {
+    if (req.kind !== "document" || req.closeout) continue;
+    const hits = names
+      .filter(([, n]) => (req.match || []).some((k) => n.includes(normalize(k)))
+        && !(req.exclude || []).some((x) => n.includes(normalize(x))))
+      .map(([f]) => f);
+    (hits.length ? found : missing).push({ id: req.id, title: req.title, files: hits });
+  }
+  const used = new Set(found.flatMap((i) => i.files));
+  return { found, missing, unmatched: names.map(([f]) => f).filter((f) => !used.has(f)) };
+}
+
+const METHOD_TEXT = { bore: "directional bore", trench: "open trench", aerial: "aerial placement on existing poles" };
+
+function draftCoverLetter(city, job, checklist, packet) {
+  const loc = job.location || "the location shown on the plans";
+  const len = job.length_ft ? `approximately ${Number(job.length_ft).toLocaleString("en-US")} feet of ` : "";
+  const lines = [
+    `Re: ${city.permit_name} application, ${job.location || "location per plans"}`,
+    "",
+    `${job.facility_owner || "The applicant"} proposes to place ${len}fiber optic cable by ${METHOD_TEXT[job.method] || job.method} at ${loc}.`,
+  ];
+  if (job.description && job.description.trim()) lines.push(job.description.trim());
+  const traffic = [];
+  if (job.lane_closure) traffic.push("a lane closure");
+  if (job.sidewalk_closure) traffic.push("a sidewalk closure");
+  lines.push(traffic.length
+    ? `The work requires ${traffic.join(" and ")}. A traffic control plan is enclosed.`
+    : "No lane or sidewalk closure is planned.");
+  if (job.start_date) lines.push(`Requested start date: ${job.start_date}.`);
+  const docs = checklist.filter((r) => r.kind === "document" && !r.closeout);
+  if (docs.length) {
+    const miss = new Set(((packet && packet.missing) || []).map((m) => m.id));
+    lines.push("", "Enclosed:");
+    for (const r of docs) lines.push(`  - ${r.title}${miss.has(r.id) ? "  [NOT YET IN PACKET]" : ""}`);
+  }
+  const notices = checklist.filter((r) => r.kind === "notice");
+  if (notices.length) {
+    lines.push("", "Notices we will complete before work begins:");
+    for (const r of notices) lines.push(`  - ${r.title}`);
+  }
+  lines.push("", job.contact ? `Questions on this submittal can go to ${job.contact}.`
+    : "Please contact us with any questions on this submittal.");
+  return lines.join("\n");
+}
+
+
+
+const $ = (id) => document.getElementById(id);
+const LABELS = { prerequisite: "Before you apply", document: "In the packet", notice: "Notices", timing: "Timing", field: "In the field", option: "Worth knowing" };
+const BOOLS = ["new_facility", "lane_closure", "sidewalk_closure", "pavement_cut", "in_tree_dripline", "near_signal", "emergency"];
+let plainLetter = "", current = null, lastMethod = null;
+
+function iso(d) { return d.toISOString().slice(0, 10); }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+const NS = "http://www.w3.org/2000/svg";
+function S(tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; return e; }
+
+function readJob() {
+  const job = { city: $("city").value, location: $("location").value.trim(),
+    method: document.querySelector('input[name="method"]:checked').value,
+    street_class: $("street_class").value, length_ft: Number($("length_ft").value) || 0,
+    pavement_age_years: Number($("pavement_age_years").value) || 0, disturbed_acres: Number($("disturbed_acres").value) || 0,
+    start_date: $("start_date").value, facility_owner: "Example Fiber LLC", contact: "permits@example.com" };
+  for (const b of BOOLS) job[b] = $(b).checked;
+  return job;
+}
+
+/* Plan-view strip: a schematic of the job that follows the form. */
+function drawStrip(job) {
+  const g = $("strip-g"); g.replaceChildren();
+  const add = (parent, tag, attrs, text) => { const n = S(tag, attrs, text); parent.append(n); return n; };
+  const X0 = 150, X1 = job.near_signal ? 790 : 830, RY = 160;
+  // ground
+  add(g, "rect", { x: 0, y: 0, width: 1000, height: 236, fill: "var(--grass)" });
+  add(g, "rect", { x: 0, y: 40, width: 1000, height: 18, fill: "var(--concrete)" });
+  add(g, "rect", { x: 0, y: 178, width: 1000, height: 18, fill: "var(--concrete)" });
+  add(g, "rect", { x: 0, y: 58, width: 1000, height: 120, fill: "var(--asphalt)" });
+  if (job.near_signal) {
+    add(g, "rect", { x: 870, y: 0, width: 90, height: 236, fill: "var(--asphalt)" });
+    add(g, "rect", { x: 862, y: 58, width: 4, height: 120, fill: "var(--lane)" });
+    const sg = add(g, "g", { transform: "translate(972 22)" });
+    add(sg, "rect", { x: -8, y: -14, width: 16, height: 40, rx: 3, fill: "#101213", stroke: "var(--lane)" });
+    [["#d9483b", -6], ["var(--center)", 6], ["#4fb477", 18]].forEach(([c, y]) => add(sg, "circle", { cx: 0, cy: y, r: 4, fill: c }));
+    add(g, "text", { x: 860, y: 228, "text-anchor": "end", class: "faint" }, "SIGNAL WITHIN 500 FT");
+  }
+  const roadEnd = job.near_signal ? 862 : 1000;
+  add(g, "line", { x1: 0, y1: 116, x2: roadEnd, y2: 116, stroke: "var(--center)", "stroke-width": 2 });
+  add(g, "line", { x1: 0, y1: 120, x2: roadEnd, y2: 120, stroke: "var(--center)", "stroke-width": 2 });
+  [88, 148].forEach((y) => add(g, "line", { x1: 0, y1: y, x2: roadEnd, y2: y, stroke: "var(--lane)", "stroke-width": 2, "stroke-dasharray": "22 26", opacity: 0.7 }));
+
+  // closures
+  if (job.lane_closure) {
+    add(g, "rect", { x: X0 - 40, y: 149, width: X1 - X0 + 80, height: 29, fill: "url(#hatch)" });
+    for (let x = X0 - 40; x <= X1 + 40; x += 46) add(g, "path", { d: `M${x} 152l5 -11l5 11z`, fill: "var(--fiber)", stroke: "#fff", "stroke-width": 0.8 });
+    add(g, "text", { x: X0 - 46, y: 138, "text-anchor": "end" }, "LANE CLOSED");
+  }
+  if (job.sidewalk_closure) {
+    [X0 - 34, X1 + 22].forEach((x) => add(g, "rect", { x, y: 180, width: 12, height: 14, fill: "url(#barr)", stroke: "#101213", "stroke-width": 0.8 }));
+    add(g, "text", { x: X1 + 42, y: 191 }, "SIDEWALK CLOSED");
+  }
+  if (job.in_tree_dripline && job.method !== "aerial") {
+    const cx = (X0 + X1) / 2 + 150;
+    add(g, "circle", { cx, cy: 204, r: 40, fill: "#3f5a3b", opacity: 0.85 });
+    add(g, "circle", { cx, cy: 204, r: 40, fill: "none", stroke: "#cfe3c4", "stroke-dasharray": "4 4" });
+    add(g, "text", { x: cx, y: 229, "text-anchor": "middle", class: "faint" }, "DRIP LINE");
+  }
+
+  // the route
+  const r = add(g, "g", { "clip-path": "url(#reveal)" });
+  if (job.method === "aerial") {
+    const PY = 212;
+    add(r, "line", { x1: X0, y1: PY, x2: X1, y2: PY, stroke: "var(--fiber)", "stroke-width": 3 });
+    const n = 5;
+    for (let i = 0; i <= n; i++) {
+      const x = X0 + (X1 - X0) * i / n;
+      add(r, "circle", { cx: x, cy: PY, r: 7, fill: "#101213", stroke: "var(--lane)", "stroke-width": 1.5 });
+      add(r, "path", { d: `M${x - 4} ${PY}h8M${x} ${PY - 4}v8`, stroke: "var(--lane)", "stroke-width": 1.2 });
+    }
+  } else {
+    if (job.method === "trench") add(r, "rect", { x: X0, y: RY - 8, width: X1 - X0, height: 16, fill: "url(#cut)", stroke: "var(--lane)", "stroke-width": 0.6 });
+    add(r, "path", { d: `M${X0} 187V${RY}H${X1}V187`, fill: "none", stroke: "var(--fiber)", "stroke-width": job.method === "trench" ? 4 : 3.5,
+      "stroke-dasharray": job.method === "bore" ? "16 9" : "none", "stroke-linejoin": "round" });
+    [X0, X1].forEach((x) => {
+      if (job.method === "bore") add(r, "rect", { x: x - 13, y: RY - 9, width: 26, height: 18, fill: job.pavement_cut ? "url(#cut)" : "#101213", stroke: "var(--fiber)", "stroke-width": 1.5 });
+      add(r, "rect", { x: x - 9, y: 180, width: 18, height: 14, fill: "#101213", stroke: "var(--lane)", "stroke-width": 1.5 });
+      add(r, "text", { x, y: 190.5, "text-anchor": "middle", class: "faint" }, "HH");
+    });
+  }
+
+  // dimension, labels
+  const label = { bore: "BORE", trench: "OPEN TRENCH", aerial: "AERIAL" }[job.method];
+  const len = job.length_ft ? job.length_ft.toLocaleString("en-US") + " LF" : "LENGTH PER PLANS";
+  add(g, "path", { d: `M${X0} 14v14M${X1} 14v14M${X0} 21H${X1}`, stroke: "var(--fiber)", "stroke-width": 1.2, fill: "none" });
+  const mid = (X0 + X1) / 2;
+  add(g, "rect", { x: mid - 125, y: 11, width: 250, height: 20, fill: "var(--grass)" });
+  add(g, "text", { x: mid, y: 26, "text-anchor": "middle", class: "dim" }, len + "  ·  " + label);
+  add(g, "text", { x: 14, y: 78 }, (job.location || "LOCATION PER PLANS").toUpperCase().slice(0, 64));
+  if (job.emergency) { add(g, "rect", { x: 12, y: 92, width: 92, height: 18, fill: "#b3261e" }); add(g, "text", { x: 58, y: 105, "text-anchor": "middle" }, "EMERGENCY"); }
+  add(g, "text", { x: 14, y: 229, class: "faint" }, "SCHEMATIC · NOT TO SCALE");
+  add(g, "path", { d: "M26 34V10M26 10l-5 9M26 10l5 9", stroke: "var(--lane)", "stroke-width": 1.5, fill: "none" });
+  add(g, "text", { x: 36, y: 20 }, "N");
+
+  if (job.method !== lastMethod) {
+    const svg = $("strip"); svg.classList.remove("draw"); void svg.getBoundingClientRect(); svg.classList.add("draw");
+    lastMethod = job.method;
+  }
+}
+
+function stat(kind, big, small, sub) {
+  const s = el("div", "stat " + kind); const b = el("b", "", big);
+  if (sub) b.append(el("small", "", sub));
+  s.append(b, el("span", "", small)); return s;
+}
+
+function render() {
+  const job = readJob(), city = CITIES[job.city];
+  const checklist = buildChecklist(city, job);
+  const files = $("files").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  const packet = checkPacket(checklist, files);
+  const lead = leadTimeCheck(checklist, $("submit_date").value, job.start_date);
+  current = { job, city, checklist, packet };
+  $("reviewed").textContent = city.reviewed;
+  drawStrip(job);
+
+  const sum = $("summary"); sum.replaceChildren();
+  sum.append(stat("", String(checklist.length), "requirements apply to this job"));
+  sum.append(packet.missing.length
+    ? stat("bad", String(packet.missing.length), packet.missing.length === 1 ? "document missing from the packet" : "documents missing from the packet")
+    : stat("good", "0", "documents missing from the packet"));
+  if (lead) sum.append(stat(lead.ok ? "good" : "bad", String(lead.have), lead.ok ? "business days of lead time: enough" : "business days of lead time: too late", " / " + lead.needed));
+  else sum.append(stat("warn", "N/A", job.emergency ? "standard lead time: emergency rules apply" : "this city states no submittal lead time"));
+
+  const missing = new Set(packet.missing.map((m) => m.id)), found = new Set(packet.found.map((m) => m.id));
+  const box = $("checklist"); box.replaceChildren();
+  const head = el("div", "head");
+  const hl = el("div"); hl.append(el("div", "kicker", city.city), el("h2", "", city.permit_name));
+  head.append(hl, el("p", "note", "Filed through: " + city.portal));
+  box.append(head);
+  for (const kind of Object.keys(LABELS)) {
+    const rows = checklist.filter((r) => r.kind === kind);
+    if (!rows.length) continue;
+    const g = el("div", "group");
+    const gh = el("div", "group-h"); gh.append(el("span", "kicker", LABELS[kind]), el("span", "count", String(rows.length))); g.append(gh);
+    for (const r of rows) {
+      const row = el("div", "req" + (missing.has(r.id) ? " is-missing" : found.has(r.id) ? " is-found" : ""));
+      const mid = el("div"); mid.append(el("div", "id", r.id), el("div", "t", r.title), el("div", "d", r.detail));
+      const s = el("div", "s"); const a = el("a", "", r.source.label + ", " + r.source.cite);
+      a.href = r.source.url; a.target = "_blank"; a.rel = "noopener"; s.append(a); mid.append(s);
+      row.append(mid);
+      if (missing.has(r.id)) row.append(el("span", "pill bad", "Missing"));
+      else if (found.has(r.id)) row.append(el("span", "pill good", "In packet"));
+      else if (r.closeout) row.append(el("span", "pill warn", "At closeout"));
+      g.append(row);
+    }
+    box.append(g);
+  }
+  if (packet.unmatched.length) box.append(el("p", "unmatched", "Not matched to any requirement: " + packet.unmatched.join(", ")));
+
+  plainLetter = draftCoverLetter(city, job, checklist, packet);
+  $("letter").textContent = plainLetter;
+  $("letter-note").textContent = "";
+  $("reset").hidden = true;
+}
+
+function init() {
+  for (const slug of Object.keys(CITIES)) { const o = el("option", "", CITIES[slug].city); o.value = slug; $("city").append(o); }
+  const today = new Date(), start = new Date(today.getTime() + 21 * 86400000);
+  $("submit_date").value = iso(today); $("start_date").value = iso(start);
+  $("job").addEventListener("input", render);
+  $("job").addEventListener("submit", (e) => e.preventDefault());
+  $("copy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("letter").textContent); $("letter-note").textContent = "Copied."; }
+    catch (e) { $("letter-note").textContent = "Copy was blocked. Select the text and copy it by hand."; }
+  });
+  const useFiles = (list) => {
+    const names = Array.from(list).map((f) => f.name).filter((n) => n && !n.startsWith("."));
+    if (!names.length) return;
+    $("files").value = names.join("\n");
+    $("drop-note").textContent = names.length + (names.length === 1 ? " file loaded." : " files loaded.");
+    render();
+  };
+  $("pick-files").addEventListener("click", () => $("file-input").click());
+  $("pick-folder").addEventListener("click", () => $("folder-input").click());
+  $("file-input").addEventListener("change", (e) => useFiles(e.target.files));
+  $("folder-input").addEventListener("change", (e) => useFiles(e.target.files));
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => useFiles(e.dataTransfer.files));
+  render();
+  lightUpClaude();
+}
+
+async function lightUpClaude() {
+  let sample = null;
+  try { if (window.claude && typeof window.claude.use === "function") sample = await window.claude.use("sample"); } catch (e) { sample = null; }
+  if (!sample) return;
+  const aiOff = () => document.querySelectorAll(".ai").forEach((n) => { n.hidden = true; });
+  $("polish").hidden = false; $("ask-panel").hidden = false;
+
+  $("polish").addEventListener("click", async () => {
+    const btn = $("polish"); btn.disabled = true; $("letter-note").textContent = "Claude is rewriting the draft.";
+    const prompt = "Rewrite this permit cover letter so a city reviewer can read it in thirty seconds. Keep every fact, date, quantity and enclosure exactly as written, including any [NOT YET IN PACKET] flags. Add nothing. Plain business English, no sales language. Return only the letter.\n\n" + plainLetter;
+    try {
+      const out = await sample(prompt, { modelTier: "quick", cache: false, onText: ({ text }) => { $("letter").textContent = text; } });
+      $("letter").textContent = out.text; $("letter-note").textContent = "Rewritten by Claude. Check it against the plain draft."; $("reset").hidden = false;
+    } catch (err) {
+      $("letter").textContent = plainLetter;
+      if (err && err.code === "not_granted") aiOff();
+      $("letter-note").textContent = err && err.code === "rate_limited" ? "Claude is busy. Try again in a minute." : "Claude could not rewrite the letter. The plain draft is unchanged.";
+    } finally { btn.disabled = false; }
+  });
+  $("reset").addEventListener("click", () => { $("letter").textContent = plainLetter; $("reset").hidden = true; $("letter-note").textContent = ""; });
+
+  $("ask").addEventListener("click", async () => {
+    const q = $("question").value.trim(); if (!q) return;
+    const btn = $("ask"), ans = $("answer"); btn.disabled = true; ans.hidden = false; ans.textContent = "Reading the rules.";
+    const rules = current.city.requirements.map((r) => ({ id: r.id, kind: r.kind, title: r.title, detail: r.detail, source: r.source.label + ", " + r.source.cite }));
+    const prompt = "You answer questions about " + current.city.city + " right-of-way permit rules for a fiber contractor.\n" +
+      "Use only the requirements in the JSON below. After each claim, give the requirement id in square brackets. " +
+      "If the requirements do not answer the question, say so plainly and suggest asking the city. Do not guess amounts or dates. Keep it under 120 words. Plain text, no markdown.\n\n" +
+      "Requirements:\n" + JSON.stringify(rules) + "\n\nJob:\n" + JSON.stringify(current.job) + "\n\nQuestion: " + q;
+    try {
+      const out = await sample(prompt, { modelTier: "default", cache: false, onText: ({ text }) => { ans.textContent = text; } });
+      ans.textContent = out.text;
+    } catch (err) {
+      if (err && err.code === "not_granted") { aiOff(); return; }
+      ans.textContent = err && err.code === "rate_limited" ? "Claude is busy. Try again in a minute." : "Claude could not answer just now.";
+    } finally { btn.disabled = false; }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

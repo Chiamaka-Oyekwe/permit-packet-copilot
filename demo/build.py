@@ -9,4 +9,8 @@ html = (HERE / "template.html").read_text()
 html = html.replace("/*__DATA__*/", json.dumps(cities).replace("</", "<\\/"))
 html = html.replace("/*__LOGIC__*/", logic)
 (HERE / "index.html").write_text(html)
+# GitHub Pages serves the docs/ folder, so anyone can open the demo without an account.
+docs = HERE.parent / "docs"
+docs.mkdir(exist_ok=True)
+(docs / "index.html").write_text(html)
 print(f"wrote demo/index.html ({len(html):,} bytes, {len(cities)} cities)")
