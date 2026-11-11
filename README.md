@@ -13,7 +13,7 @@ Every requirement carries the ordinance section or form page it came from, so a 
 
 **Cities so far:** Dallas, Fort Worth, Richardson.
 
-**Live demo:** https://tochoby.github.io/permit-packet-copilot/ (opens for anyone, no account needed)
+**Live demo:** https://chiamaka-oyekwe.github.io/permit-packet-copilot/ (opens for anyone, no account needed)
 
 The same page [on Claude](https://claude.ai/artifact/5kxrhPYoBvTFStFXJmTrqV) adds two AI features for signed-in viewers: tightening the cover letter and answering questions about a city's rules.
 
